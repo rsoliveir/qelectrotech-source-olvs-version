@@ -845,6 +845,11 @@ QDomDocument Diagram::toXml(bool whole_content, bool is_copy_command) {
 					  m_freeze_new_conductors_
 					  ? QStringLiteral("true") : QStringLiteral("false"));
 
+		///  ------- OLVS edition v0.101 --------------
+		/// alteration for implementation of panel layout design like AutoCad
+		//Folio type
+		dom_root.setAttribute(QStringLiteral("type"), folioTypeToString(m_folio_type));
+
 		//Element Folio Sequential Variables
 		if (!m_elmt_unitfolio_max.isEmpty()
 				|| !m_elmt_tenfolio_max.isEmpty()
@@ -1327,6 +1332,9 @@ bool Diagram::fromXml(QDomElement &document,
 
 			// Load Freeze New Conductor
 		m_freeze_new_conductors_ = root.attribute(QStringLiteral("freezeNewConductor")).toInt();
+
+		// Load folio type (fallback to Schematic if attribute is missing — legacy projects)
+		m_folio_type = folioTypeFromString(root.attribute(QStringLiteral("type"), QStringLiteral("schematic")));
 
 			//Load Element Folio Sequential
 		folioSequentialsFromXml(root,
@@ -2476,6 +2484,38 @@ int Diagram::folioIndex() const
 {
 	if (!m_project) return(-1);
 	return(m_project -> folioIndex(this));
+}
+
+///  ------- OLVS edition v0.101 --------------
+/// alteration for implementation of panel layout design like AutoCad
+Diagram::FolioType Diagram::folioType() const
+{
+	return m_folio_type;
+}
+
+void Diagram::setFolioType(FolioType type)
+{
+	if (m_folio_type == type)
+		return;
+	m_folio_type = type;
+	emit folioTypeChanged(this, m_folio_type);
+}
+
+QString Diagram::folioTypeToString(FolioType type)
+{
+	switch (type) {
+		case FolioType::PanelLayout:   return QStringLiteral("panel_layout");
+		case FolioType::Documentation: return QStringLiteral("documentation");
+		case FolioType::Schematic:
+		default:                       return QStringLiteral("schematic");
+	}
+}
+
+Diagram::FolioType Diagram::folioTypeFromString(const QString &str)
+{
+	if (str == QStringLiteral("panel_layout"))   return FolioType::PanelLayout;
+	if (str == QStringLiteral("documentation"))  return FolioType::Documentation;
+	return FolioType::Schematic;
 }
 
 /**

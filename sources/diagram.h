@@ -1,17 +1,17 @@
 /*
 	Copyright 2006-2026 The QElectroTech Team
 	This file is part of QElectroTech.
-	
+
 	QElectroTech is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 2 of the License, or
 	(at your option) any later version.
-	
+
 	QElectroTech is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with QElectroTech.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -56,13 +56,13 @@ class Diagram : public QGraphicsScene
 	friend QETProject;
 
 	Q_OBJECT
-	
+
 		// constructors, destructor
 	private:
 		Diagram(QETProject *project);
 		~Diagram() override;
 		Diagram(const Diagram &diagram);
-	
+
 	// ATTRIBUTES
 	public:
 		struct Guide {
@@ -82,6 +82,11 @@ class Diagram : public QGraphicsScene
 		enum BorderOptions { EmptyBorder, TitleBlock, Columns };
 		/// Represents available option of Numerotation type.
 		enum NumerotationType { Conductors };
+
+		///  ------- OLVS edition v0.101 --------------
+		/// alteration for implementation of panel layout design like AutoCad
+		enum class FolioType { Schematic, PanelLayout, Documentation };
+
 		/// Default properties for new conductors
 		ConductorProperties defaultConductorProperties;
 		/// Diagram dimensions and title block
@@ -121,6 +126,9 @@ class Diagram : public QGraphicsScene
 		QDomDocument xml_document_;
 
 		qreal diagram_qet_version_;
+		///  ------- OLVS edition v0.101 --------------
+		/// alteration for implementation of panel layout design like AutoCad
+		FolioType m_folio_type = FolioType::Schematic;
 
 		bool draw_grid_;
 		bool use_border_;
@@ -136,7 +144,7 @@ class Diagram : public QGraphicsScene
 		bool m_freeze_new_elements;
 		bool m_freeze_new_conductors_;
 		QUuid m_uuid = QUuid::createUuid();
-	
+
 	// METHODS
 	protected:
 		void drawBackground(QPainter *, const QRectF &) override;
@@ -151,7 +159,7 @@ class Diagram : public QGraphicsScene
 		void keyPressEvent (QKeyEvent *event) override;
 		void keyReleaseEvent (QKeyEvent *) override;
 
-	
+
 	public:
 		void correctTextPos(Element* elmt);
 		void restoreText(Element* elmt);
@@ -164,19 +172,26 @@ class Diagram : public QGraphicsScene
 		void setConductorsAutonumName(const QString &name);
 
 		static bool clipboardMayContainDiagram();
-	
+
 		// methods related to parent project
 		QETProject *project() const;
 		int         folioIndex() const;
+		///  ------- OLVS edition v0.101 --------------
+		/// alteration for implementation of panel layout design like AutoCad
+		FolioType   folioType() const;
+		void        setFolioType(FolioType type);
+		static QString   folioTypeToString(FolioType type);
+		static FolioType  folioTypeFromString(const QString &str);
+
 		void        showMe() {emit showDiagram(this);}
 		bool        isReadOnly() const;
-	
+
 		// methods related to conductor creation
 		void setConductor(bool);
 		void setConductorStart (QPointF);
 		void setConductorStop(QPointF);
 		QList < QSet <Conductor *> > potentials();
-	
+
 		// methods related to XML import/export
 		QDomDocument toXml(bool wholeContent = true, bool is_copy_command = false);
 		bool initFromXml(QDomElement &,
@@ -204,13 +219,13 @@ class Diagram : public QGraphicsScene
 					     const QString&,
 					     const QString&,
 					     const QString&);
-	
+
 		void refreshContents();
-	
+
 		// methods related to graphics items addition/removal on the diagram
 		virtual void addItem    (QGraphicsItem *item);
 		virtual void removeItem (QGraphicsItem *item);
-	
+
 		// methods related to graphics options
 		ExportProperties applyProperties(const ExportProperties &);
 		void setDisplayGrid(bool);
@@ -224,21 +239,21 @@ class Diagram : public QGraphicsScene
 		BorderOptions borderOptions();
 		DiagramPosition convertPosition(const QPointF &);
 		static QPointF snapToGrid(const QPointF &p);
-	
+
 		bool drawTerminals() const;
 		void setDrawTerminals(bool);
 		bool drawTerminalNames() const;
 		void setDrawTerminalNames(bool);
 		bool drawColoredConductors() const;
 		void setDrawColoredConductors(bool);
-	
+
 		QString title() const;
 		bool toPaintDevice(QPaintDevice &, int = -1, int = -1,
 				   Qt::AspectRatioMode = Qt::KeepAspectRatio);
 		QSize imageSize() const;
-		
+
 		bool isEmpty() const;
-	
+
 		QList<Element *> elements() const;
 		QList<Conductor *> conductors() const;
 		QSet<Conductor *> selectedConductors() const;
@@ -248,21 +263,21 @@ class Diagram : public QGraphicsScene
 		ElementTextsMover &elementTextsMover();
 		bool usesElement(const ElementsLocation &);
 		bool usesTitleBlockTemplate(const QString &);
-		
+
 		QUndoStack &undoStack();
 		QGIManager &qgiManager();
-	
+
 		//methods related to element label Update Policy
 		void freezeElements(bool freeze);
 		void unfreezeElements();
 		void setFreezeNewElements(bool);
 		bool freezeNewElements();
-	
+
 		//methods related to conductor label Update Policy
 		void freezeConductors(bool freeze);
 		void setFreezeNewConductors(bool);
 		bool freezeNewConductors();
-	
+
 		//methods related to insertion and loading of folio sequential
 		void insertFolioSeqHash (QHash<QString, QStringList> *hash,
 					 const QString& title,
@@ -282,7 +297,7 @@ class Diagram : public QGraphicsScene
 		void setTitleBlockTemplate(const QString &);
 		void loadElmtFolioSeq();
 		void loadCndFolioSeq();
-	
+
 		// methods related to graphics items selection
 		void selectAll();
 		void deselectAll();
@@ -292,6 +307,9 @@ class Diagram : public QGraphicsScene
 		void showDiagram (Diagram *);
 		void usedTitleBlockTemplateChanged(const QString &);
 		void diagramTitleChanged(Diagram *);
+		///  ------- OLVS edition v0.101 --------------
+		/// alteration for implementation of panel layout design like AutoCad
+		void folioTypeChanged(Diagram *, FolioType);
 
 		/// Signal emitted when users wish to locate an element
 		/// from the diagram within elements collection
