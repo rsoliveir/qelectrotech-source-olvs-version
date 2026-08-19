@@ -42,6 +42,7 @@
 #include "qetproject.h"
 #include <cassert>
 #include <math.h>
+#include <QInputDialog>
 
 int Diagram::xGrid  = 10;
 int Diagram::yGrid  = 10;
@@ -2515,6 +2516,35 @@ Diagram::FolioType Diagram::folioTypeFromString(const QString &str)
 {
 	if (str == QStringLiteral("panel_layout"))   return FolioType::PanelLayout;
 	if (str == QStringLiteral("documentation"))  return FolioType::Documentation;
+	return FolioType::Schematic;
+}
+
+/// OLVS-version edition
+Diagram::FolioType Diagram::askFolioTypeDialog(QWidget *parent)
+{
+	const QStringList options = {
+		QObject::tr("Schematic"),
+		QObject::tr("Panel Design"),
+		QObject::tr("Documentation")
+	};
+
+	bool ok = false;
+	QString choice = QInputDialog::getItem(
+		parent,
+		QObject::tr("Novo folio"),
+		QObject::tr("Tipo de folio:"),
+		options,
+		0,      // initial index defined (0 = "Schematic")
+		false,  // unable to be editted by user
+		&ok
+	);
+
+	if (!ok) {
+		return FolioType::Schematic; // if user cancel it, default type is assumed
+	}
+
+	if (choice == options.at(1)) return FolioType::PanelLayout;
+	if (choice == options.at(2)) return FolioType::Documentation;
 	return FolioType::Schematic;
 }
 

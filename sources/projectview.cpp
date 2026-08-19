@@ -787,7 +787,7 @@ int ProjectView::cleanProject()
 			m_project->embeddedElementCollection()->cleanUnusedDirectory();
 		}
 	}
-	
+
 	m_project -> setModified(true);
 	return(clean_count);
 }
@@ -798,11 +798,14 @@ int ProjectView::cleanProject()
 void ProjectView::initActions()
 {
 	m_add_new_diagram = new QAction(QET::Icons::AddFolio, tr("Ajouter un folio"), this);
-	connect(m_add_new_diagram, &QAction::triggered, [this](){this->m_project->addNewDiagram();});
-	
+	connect(m_add_new_diagram, &QAction::triggered, [this](){
+		Diagram::FolioType type = Diagram::askFolioTypeDialog(this);
+		this->m_project->addNewDiagram(-1, type);
+	});
+
 	m_first_view = new QAction(QET::Icons::ArrowLeftDouble, tr("Revenir au debut du projet"),this);
 	connect(m_first_view, &QAction::triggered, [this](){this->m_tab->setCurrentWidget(firstDiagram());});
-	
+
 	m_end_view = new QAction(QET::Icons::ArrowRightDouble, tr("Aller à la fin du projet"),this);
 	connect(m_end_view, &QAction::triggered, [this](){this->m_tab->setCurrentWidget(lastDiagram());});
 
@@ -1040,13 +1043,13 @@ void ProjectView::diagramAdded(Diagram *diagram)
 void ProjectView::updateTabTitle(DiagramView *diagram_view)
 {
 	int diagram_tab_id = m_diagram_ids.key(diagram_view, -1);
-	
+
 	if (diagram_tab_id != -1)
 	{
 		QSettings settings;
 		QString title;
 		Diagram *diagram = diagram_view->diagram();
-		
+
 		if (settings.value("genericpanel/folio", false).toBool())
 		{
 			QString formula = diagram->border_and_titleblock.folio();
@@ -1058,7 +1061,7 @@ void ProjectView::updateTabTitle(DiagramView *diagram_view)
 		}
 		else
 			title = QString::number(diagram->folioIndex() + 1);
-		
+
 		title += " - ";
 		title += diagram->title();
 		m_tab->setTabText(diagram_tab_id ,title);
@@ -1183,9 +1186,9 @@ void ProjectView::tabChanged(int tab_id)
 		setDisplayFallbackWidget(true);
 	else if(m_tab->count() == 1)
 		setDisplayFallbackWidget(false);
-	
+
 	emit(diagramActivated(m_diagram_ids[tab_id]));
-	
+
 	if (m_diagram_ids[tab_id] != nullptr)
 		m_diagram_ids[tab_id]->diagram()->diagramActivated();
 
