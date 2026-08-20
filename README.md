@@ -71,6 +71,9 @@ QElectroTech runs on the 3 most widespread operating systems for desktop compute
 Files that were created on an OS can be edited on another OS without any conversion or restriction.  
 MS Windows users can even run the "ready-to-use" version of QElectroTech from an external medium with no need to install it on an access restricted computer.
 
+# OLVS design example with QET.
+
+[pag_safety.pdf](https://github.com/user-attachments/files/31247306/pag_safety.pdf)
 
 Take advantage of the modern GUI
 
@@ -224,10 +227,6 @@ If you love QElectroTech, you can help developers to buy new hardware to test
 and implement new features. Thanks in advance for your generous donations.
 
 For more information, look at [Paypal](https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=ZZHC9D7C3MDPC&ssrt=1694606609672)
-
-OLVS design example with QET.
-
-[pag_safety.pdf](https://github.com/user-attachments/files/31247306/pag_safety.pdf)
 
 
 
