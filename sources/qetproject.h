@@ -214,7 +214,10 @@ class QETProject : public QObject
 		bool removeTerminalStrip(TerminalStrip *strip);
 
 	public slots:
-		Diagram *addNewDiagram(int pos = -1);
+	    Diagram *addNewDiagram(int pos = -1, Diagram::FolioType type = Diagram::FolioType::Schematic);
+		/// OLVS-version edition
+		QList<Diagram::FolioType> folioGroupOrder() const;
+		void setFolioGroupOrder(const QList<Diagram::FolioType> &order);
 		void removeDiagram(Diagram *);
 		void diagramOrderChanged(int, int);
 		void setModified(bool);

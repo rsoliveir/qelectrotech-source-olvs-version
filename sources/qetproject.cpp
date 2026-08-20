@@ -537,6 +537,47 @@ QList<GuideProperties> QETProject::defaultGuides() const {
 	return m_default_guides;
 }
 
+/// OLVS-version edition
+QList<Diagram::FolioType> QETProject::folioGroupOrder() const
+{
+	static const QList<Diagram::FolioType> default_order = {
+		Diagram::FolioType::Schematic,
+		Diagram::FolioType::PanelLayout,
+		Diagram::FolioType::Documentation
+	};
+
+	if (!m_project_properties.contains(QStringLiteral("foliogrouporder")))
+		return default_order;
+
+	const QStringList parts = m_project_properties
+		.value(QStringLiteral("foliogrouporder"))
+		.toString()
+		.split(',', Qt::SkipEmptyParts);
+
+	QList<Diagram::FolioType> order;
+	for (const QString &part : parts) {
+		order << Diagram::folioTypeFromString(part);
+	}
+
+	// Malformed or incomplete saved order (e.g. edited by hand) falls back to default
+	if (order.size() != default_order.size())
+		return default_order;
+
+	return order;
+}
+
+/// OLVS-version edition
+void QETProject::setFolioGroupOrder(const QList<Diagram::FolioType> &order)
+{
+	QStringList parts;
+	for (auto type : order) {
+		parts << Diagram::folioTypeToString(type);
+	}
+	// show = false: this is an internal setting, not meant to appear
+	// as a placeholder/variable option in autonum-related UI
+	m_project_properties.addValue(QStringLiteral("foliogrouporder"), parts.join(QLatin1Char(',')), false);
+}
+
 void QETProject::setDefaultGuides(const QList<GuideProperties> &guides) {
 	if (m_default_guides != guides) {
 		m_default_guides = guides;
@@ -1383,18 +1424,16 @@ bool QETProject::usesTitleBlockTemplate(const TitleBlockTemplateLocation &locati
 	@param pos
 	@return the new created diagram
 */
-Diagram *QETProject::addNewDiagram(int pos)
+Diagram *QETProject::addNewDiagram(int pos, Diagram::FolioType type)
 {
 	if (isReadOnly()) {
 		return(nullptr);
 	}
-
 	Diagram *diagram = new Diagram(this);
-
 	diagram->border_and_titleblock.importBorder(defaultBorderProperties());
 	diagram->border_and_titleblock.importTitleBlock(defaultTitleBlockProperties());
 	diagram->defaultConductorProperties = defaultConductorProperties();
-
+	diagram->setFolioType(type);
 	m_undo_stack->push(new AddDiagramCommand(this, diagram, pos));
 	return(diagram);
 }

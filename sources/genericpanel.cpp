@@ -1,17 +1,17 @@
 /*
 	Copyright 2006-2026 The QElectroTech Team
 	This file is part of QElectroTech.
-	
+
 	QElectroTech is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 2 of the License, or
 	(at your option) any later version.
-	
+
 	QElectroTech is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with QElectroTech.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -66,7 +66,7 @@ QETProject *GenericPanel::projectForItem(QTreeWidgetItem *item) const
 		return(valueForItem<QETProject *>(item));
 	}
 	return(nullptr);
-	
+
 }
 
 /**
@@ -135,13 +135,13 @@ QTreeWidgetItem *GenericPanel::addProject(QETProject *project,
 					  PanelOptions options) {
 	if (!project) return(nullptr);
 	bool creation_required;
-	
+
 	QTreeWidgetItem *project_qtwi = getItemForProject(project,
 							  &creation_required);
 	updateProjectItem(project_qtwi, project, options, creation_required);
 	reparent(project_qtwi, parent_item);
 	fillProjectItem(project_qtwi, project, options, creation_required);
-	
+
 	return(project_qtwi);
 }
 
@@ -166,13 +166,13 @@ QTreeWidgetItem *GenericPanel::itemForProject(QETProject *project) {
 QTreeWidgetItem *GenericPanel::getItemForProject(QETProject *project,
 						 bool *created) {
 	if (!project) return(nullptr);
-	
+
 	QTreeWidgetItem *project_qtwi = projects_.value(project, nullptr);
 	if (project_qtwi) {
 		if (created) *created = false;
 		return(project_qtwi);
 	}
-	
+
 	project_qtwi = makeItem(QET::Project);
 	if (created) *created = true;
 	return(project_qtwi);
@@ -192,12 +192,12 @@ QTreeWidgetItem *GenericPanel::updateProjectItem(QTreeWidgetItem *project_qtwi,
 						 bool freshly_created) {
 	Q_UNUSED(options)
 	if (!project_qtwi || !project) return(nullptr);
-	
+
 	if (freshly_created) {
 		project_qtwi -> setData(0, GenericPanel::Item,
 					QVariant::fromValue(project));
 		projects_.insert(project, project_qtwi);
-		
+
 		connect(
 			project,&QETProject::projectInformationsChanged,
 			this,&GenericPanel::projectInformationsChanged);
@@ -205,7 +205,7 @@ QTreeWidgetItem *GenericPanel::updateProjectItem(QTreeWidgetItem *project_qtwi,
 			project,&QETProject::readOnlyChanged,
 			this,&GenericPanel::projectInformationsChanged);
 	}
-	
+
 	// text
 	project_qtwi -> setText(0, project -> pathNameTitle());
 	// tooltip
@@ -239,34 +239,37 @@ QTreeWidgetItem *GenericPanel::fillProjectItem(QTreeWidgetItem *project_qtwi,
 					       PanelOptions options,
 					       bool freshly_created) {
 	if (!project_qtwi || !project) return(nullptr);
-	
-	
+
+
 	if (options & AddChildDiagrams) {
 		if (freshly_created) {
-			connect(
-				project,&QETProject::diagramAdded,
-				this,&GenericPanel::diagramAdded);
-			connect(
-				project,&QETProject::diagramRemoved,
-				this,&GenericPanel::diagramRemoved);
-			connect(
-				project,&QETProject::projectDiagramsOrderChanged,
-				this,&GenericPanel::projectDiagramsOrderChanged);
+			connect(project,&QETProject::diagramAdded, this,&GenericPanel::diagramAdded);
+			connect(project,&QETProject::diagramRemoved, this,&GenericPanel::diagramRemoved);
+			connect(project,&QETProject::projectDiagramsOrderChanged, this,&GenericPanel::projectDiagramsOrderChanged);
 		} else {
-			// remove diagrams unknown to the project (presumably removed)
-			removeObsoleteItems(project -> diagrams(),
-					    project_qtwi, QET::Diagram, false);
+			// OLVS-version edition — diagrams now live one level deeper, inside
+			// group items, so the search for obsolete items must be recursive.
+			removeObsoleteItems(project -> diagrams(), project_qtwi, QET::Diagram, true);
 		}
-		int index = 0;
+
+		// OLVS-version edition — group diagrams by folio type
+		QHash<QTreeWidgetItem *, int> insertion_index;
+
+		// OLVS-version edition — pre-create group items in the configured order,
+		// so their position in the tree follows the user's preference even before
+		// any diagram of that type exists.
+		for (auto type : project->folioGroupOrder()) {
+			getOrCreateFolioGroupItem(project_qtwi, type);
+		}
 		foreach (Diagram *diagram, project -> diagrams()) {
-			QTreeWidgetItem *diagram_qtwi = addDiagram(diagram,
-								   nullptr,
-								   options);
-			project_qtwi -> insertChild(index, diagram_qtwi);
-			++ index;
+			QTreeWidgetItem *group_qtwi = getOrCreateFolioGroupItem(project_qtwi, diagram->folioType());
+			QTreeWidgetItem *diagram_qtwi = addDiagram(diagram, nullptr, options);
+			int idx = insertion_index.value(group_qtwi, 0);
+			group_qtwi -> insertChild(idx, diagram_qtwi);
+			insertion_index[group_qtwi] = idx + 1;
 		}
 	}
-	
+
 	if (options & AddChildTemplatesCollection) {
 		if (freshly_created) {
 			connect(
@@ -294,15 +297,15 @@ QTreeWidgetItem *GenericPanel::addDiagram(Diagram *diagram,
 					  PanelOptions options) {
 	Q_UNUSED(options)
 	if (!diagram) return(nullptr);
-	
+
 	bool creation_required;
-	
+
 	QTreeWidgetItem *diagram_qtwi = getItemForDiagram(diagram,
 							  &creation_required);
 	updateDiagramItem(diagram_qtwi, diagram, options, creation_required);
 	reparent(diagram_qtwi, parent_item);
 	fillDiagramItem(diagram_qtwi, options, creation_required);
-	
+
 	return(diagram_qtwi);
 }
 
@@ -315,7 +318,7 @@ QTreeWidgetItem *GenericPanel::addDiagram(Diagram *diagram,
 QTreeWidgetItem *GenericPanel::getItemForDiagram(Diagram *diagram,
 						 bool *created) {
 	if (!diagram) return(nullptr);
-	
+
 	QTreeWidgetItem *diagram_qtwi = diagrams_.value(diagram, nullptr);
 	if (diagram_qtwi) {
 		if (created) *created = false;
@@ -343,7 +346,7 @@ QTreeWidgetItem *GenericPanel::updateDiagramItem(QTreeWidgetItem *diagram_qtwi,
 						 bool freshly_created) {
 	if (!diagram || !diagram_qtwi) return(nullptr);
 	QSettings settings;
-	
+
 	QString displayed_title = diagram -> title();
 	if (displayed_title.isEmpty())
 	{
@@ -393,11 +396,11 @@ QTreeWidgetItem *GenericPanel::updateDiagramItem(QTreeWidgetItem *diagram_qtwi,
 					GenericPanel::Item,
 					QVariant::fromValue(diagram));
 		diagrams_.insert(diagram, diagram_qtwi);
-		
+
 		connect(diagram, &Diagram::diagramTitleChanged,
 			this, &GenericPanel::diagramTitleChanged);
 	}
-	
+
 	return(updateItem(diagram_qtwi, options, freshly_created));
 }
 
@@ -431,7 +434,7 @@ QTreeWidgetItem *GenericPanel::addTemplatesCollection(
 		PanelOptions options) {
 	if (!tbt_collection) return(nullptr);
 	bool creation_required;
-	
+
 	QTreeWidgetItem *tbt_collection_qtwi =
 			getItemForTemplatesCollection(tbt_collection,
 						      &creation_required);
@@ -444,7 +447,7 @@ QTreeWidgetItem *GenericPanel::addTemplatesCollection(
 				    tbt_collection,
 				    options,
 				    creation_required);
-	
+
 	return(tbt_collection_qtwi);
 }
 
@@ -477,7 +480,7 @@ QTreeWidgetItem *GenericPanel::getItemForTemplatesCollection(
 		if (created) *created = false;
 		return(tbt_collection_item);
 	}
-	
+
 	tbt_collection_item = makeItem(QET::TitleBlockTemplatesCollection);
 	if (created) *created = true;
 	return(tbt_collection_item);
@@ -498,11 +501,11 @@ QTreeWidgetItem *GenericPanel::updateTemplatesCollectionItem(
 		bool freshly_created) {
 	QString label = tbt_collection -> title();
 	if (label.isEmpty()) label = tr("Modèles de cartouche");
-	
+
 	tbt_collection_qtwi -> setText(0, label);
 	tbt_collection_qtwi -> setToolTip(0,
 					  tbt_collection->location().toString());
-	
+
 	if (freshly_created) {
 		tbt_collection_qtwi -> setData(0,
 					       GenericPanel::Item,
@@ -511,7 +514,7 @@ QTreeWidgetItem *GenericPanel::updateTemplatesCollectionItem(
 		tb_templates_.insert(tbt_collection -> location(),
 				     tbt_collection_qtwi);
 	}
-	
+
 	return(updateItem(tbt_collection_qtwi, options, freshly_created));
 }
 
@@ -530,7 +533,7 @@ QTreeWidgetItem *GenericPanel::fillTemplatesCollectionItem(
 		bool freshly_created) {
 	if (!tbt_collection_qtwi || !tbt_collection)
 		return(tbt_collection_qtwi);
-	
+
 	if (options & AddChildTemplates) {
 		if (freshly_created) {
 			connect(
@@ -552,7 +555,7 @@ QTreeWidgetItem *GenericPanel::fillTemplatesCollectionItem(
 					QET::TitleBlockTemplate,
 					false);
 		}
-		
+
 		int index = 0;
 		foreach (QString template_name, tbt_collection -> templates()) {
 			QTreeWidgetItem *template_item =
@@ -565,7 +568,7 @@ QTreeWidgetItem *GenericPanel::fillTemplatesCollectionItem(
 							   template_item);
 		}
 	}
-	
+
 	return(fillItem(tbt_collection_qtwi, options, freshly_created));
 }
 
@@ -582,7 +585,7 @@ QTreeWidgetItem *GenericPanel::addTemplate(
 		PanelOptions options) {
 	if (!tb_template.isValid()) return(nullptr);
 	bool creation_required;
-	
+
 	QTreeWidgetItem *tb_template_qtwi = getItemForTemplate(tb_template,
 							       &creation_required);
 	updateTemplateItem(tb_template_qtwi,
@@ -594,7 +597,7 @@ QTreeWidgetItem *GenericPanel::addTemplate(
 			 tb_template,
 			 options,
 			 creation_required);
-	
+
 	return(tb_template_qtwi);
 }
 
@@ -608,14 +611,14 @@ QTreeWidgetItem *GenericPanel::getItemForTemplate(
 		const TitleBlockTemplateLocation &tb_template,
 		bool *created) {
 	if (!tb_template.isValid()) return(nullptr);
-	
+
 	QTreeWidgetItem *tb_template_qtwi = tb_templates_.value(tb_template,
 								nullptr);
 	if (tb_template_qtwi) {
 		if (created) *created = false;
 		return(tb_template_qtwi);
 	}
-	
+
 	tb_template_qtwi = makeItem(QET::TitleBlockTemplate);
 	if (created) *created = true;
 	return(tb_template_qtwi);
@@ -646,7 +649,7 @@ QTreeWidgetItem *GenericPanel::updateTemplateItem(
 	// note the following lines are technically marking the template as used
 	tb_template_qtwi -> setToolTip(0, tb_template.toString());
 	tb_template_qtwi -> setBackground(0, QBrush());
-	
+
 	// special action for templates that belong to a project
 	if (QETProject *tbt_project = tb_template.parentProject()) {
 		// display unused templates using a red background
@@ -654,7 +657,7 @@ QTreeWidgetItem *GenericPanel::updateTemplateItem(
 			markItemAsUnused(tb_template_qtwi);
 		}
 	}
-	
+
 	if (freshly_created) {
 		tb_template_qtwi -> setData(0,
 					    GenericPanel::Item,
@@ -762,15 +765,15 @@ void GenericPanel::projectDiagramsOrderChanged(QETProject *project,
 	// get the item representing the provided project
 	QTreeWidgetItem *qtwi_project = itemForProject(project);
 	if (!qtwi_project) return;
-	
+
 	// get the item representing the moved diagram
 	QTreeWidgetItem *moved_qtwi_diagram = qtwi_project -> child(from);
 	if (!moved_qtwi_diagram) return;
-	
+
 	// remove the QTWI then insert it back at the adequate location
 	qtwi_project -> removeChild (moved_qtwi_diagram);
 	qtwi_project -> insertChild (to, moved_qtwi_diagram);
-	
+
 	// update the QTWI labels because they may display the folio index
 	for (int i = qMin(from, to); i < qMax(from, to) + 1; i++)
 	{
@@ -781,7 +784,7 @@ void GenericPanel::projectDiagramsOrderChanged(QETProject *project,
 		if (diagram)
 			updateDiagramItem(qtwi_diagram, diagram);
 	}
-	
+
 		// select the moved diagram
 	if(m_selected_item){
 		setCurrentItem(moved_qtwi_diagram);
@@ -891,6 +894,39 @@ QTreeWidgetItem *GenericPanel::makeItem(QET::ItemType type,
 	return(qtwi);
 }
 
+/// OLVS-version edition
+/**
+	@brief GenericPanel::getOrCreateFolioGroupItem
+	Returns the tree item representing the category group for a given
+	folio type (Schematic / Panel Layout / Documentation), creating it
+	as a child of \a project_item if it doesn't exist yet.
+*/
+QTreeWidgetItem *GenericPanel::getOrCreateFolioGroupItem(QTreeWidgetItem *project_item, Diagram::FolioType type)
+{
+	QString group_label;
+	switch (type) {
+		case Diagram::FolioType::PanelLayout:
+			group_label = tr("Panel Layout");
+			break;
+		case Diagram::FolioType::Documentation:
+			group_label = tr("Documentation");
+			break;
+		case Diagram::FolioType::Schematic:
+		default:
+			group_label = tr("Diagrams");
+			break;
+	}
+
+	for (int i = 0 ; i < project_item->childCount() ; ++i) {
+		QTreeWidgetItem *child = project_item->child(i);
+		if (child->type() == QET::DiagramGroup && child->text(0) == group_label) {
+			return child;
+		}
+	}
+
+	return makeItem(QET::DiagramGroup, project_item, group_label);
+}
+
 /**
 	@brief GenericPanel::deleteItem
 	Delete and item and its children.
@@ -904,7 +940,7 @@ void GenericPanel::deleteItem(QTreeWidgetItem *item, bool deleted_on_cascade) {
 	for (int i = item -> childCount() - 1 ; i >= 0 ; -- i) {
 		deleteItem(item -> child(i), true);
 	}
-	
+
 	// delete the item itself
 	unregisterItem(item);
 	delete item;
@@ -1011,7 +1047,7 @@ const;
 */
 void GenericPanel::unregisterItem(QTreeWidgetItem *item) {
 	if (!item) return;
-	
+
 	int type = item ->type();
 	if (type & QET::TitleBlockTemplatesCollectionItem) {
 		tb_templates_.remove(valueForItem<TitleBlockTemplateLocation>(item));

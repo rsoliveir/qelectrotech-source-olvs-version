@@ -1,17 +1,17 @@
 /*
 	Copyright 2006-2026 The QElectroTech Team
 	This file is part of QElectroTech.
-	
+
 	QElectroTech is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 2 of the License, or
 	(at your option) any later version.
-	
+
 	QElectroTech is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with QElectroTech.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -19,6 +19,7 @@
 #define GENERIC_PANEL_H
 #include "qet.h"
 #include <QTreeWidget>
+#include "diagram.h"
 
 class QTreeWidgetItem;
 class QETProject;
@@ -35,7 +36,7 @@ class TitleBlockTemplateLocation;
 */
 class GenericPanel : public QTreeWidget {
 	Q_OBJECT
-	
+
 	public:
 	enum PanelOption {
 		AddChildDiagrams              =   1,
@@ -46,19 +47,19 @@ class GenericPanel : public QTreeWidget {
 		All                           = 127
 	};
 	Q_DECLARE_FLAGS(PanelOptions, PanelOption)
-	
+
 	enum MetaData {
 		Item = Qt::UserRole + 1,
 		AliasItem,
 		Parent,
 		PanelFlags
 	};
-	
+
 	// Constructors, destructor
 	public:
 	GenericPanel(QWidget * = nullptr);
 	~GenericPanel() override;
-	
+
 	public:
 	// convenience methods to obtain what an item represents
 	virtual int currentItemType();
@@ -66,12 +67,12 @@ class GenericPanel : public QTreeWidget {
 	virtual Diagram *diagramForItem(QTreeWidgetItem *) const;
 	virtual TitleBlockTemplateLocation templateLocationForItem(
 			QTreeWidgetItem *) const;
-	
+
 	// convenience methods to obtain what the selected item represents
 	virtual QETProject *selectedProject() const;
 	virtual Diagram *selectedDiagram() const;
 	virtual TitleBlockTemplateLocation selectedTemplateLocation() const;
-	
+
 	// project-related methods
 	public:
 	virtual QTreeWidgetItem *addProject(QETProject *,
@@ -89,7 +90,7 @@ class GenericPanel : public QTreeWidget {
 						   QETProject *,
 						   PanelOptions = AddAllChild,
 						   bool = false);
-	
+
 	// diagram-related methods
 	public:
 	virtual QTreeWidgetItem *addDiagram(Diagram *,
@@ -105,7 +106,7 @@ class GenericPanel : public QTreeWidget {
 			QTreeWidgetItem *,
 			PanelOptions = AddAllChild,
 			bool = false);
-	
+
 	// title block templates collections methods
 	public:
 	virtual QTreeWidgetItem *addTemplatesCollection(
@@ -128,7 +129,7 @@ class GenericPanel : public QTreeWidget {
 			TitleBlockTemplatesCollection *,
 			PanelOptions = AddAllChild,
 			bool = false);
-	
+
 	// title block templates methods
 	public:
 	virtual QTreeWidgetItem *addTemplate(const TitleBlockTemplateLocation &,
@@ -148,7 +149,7 @@ class GenericPanel : public QTreeWidget {
 			const TitleBlockTemplateLocation &,
 			PanelOptions = AddAllChild,
 			bool = false);
-	
+
 	// generic methods
 	protected:
 	virtual QTreeWidgetItem *updateItem(QTreeWidgetItem *,
@@ -157,7 +158,7 @@ class GenericPanel : public QTreeWidget {
 	virtual QTreeWidgetItem *fillItem(QTreeWidgetItem *,
 					  PanelOptions = AddAllChild,
 					  bool = false);
-	
+
 	// slots used to receive change notifications from added objects
 	protected slots:
 	virtual void projectInformationsChanged(QETProject *);
@@ -169,7 +170,7 @@ class GenericPanel : public QTreeWidget {
 						const QString &);
 	virtual void diagramUsedTemplate(TitleBlockTemplatesCollection *,
 					 const QString &);
-	
+
 	// various other methods
 	public:
 	void setSelectedItem(QTreeWidgetItem *selectedItem);
@@ -181,6 +182,8 @@ class GenericPanel : public QTreeWidget {
 					  QTreeWidgetItem * = nullptr,
 					  const QString & = QString(),
 					  const QIcon & = QIcon());
+	/// OLVS-version edition
+	virtual QTreeWidgetItem *getOrCreateFolioGroupItem(QTreeWidgetItem *project_item, Diagram::FolioType type);
 	virtual void deleteItem(QTreeWidgetItem *, bool = false);
 	virtual void markItemAsUnused(QTreeWidgetItem *);
 	virtual void reparent(QTreeWidgetItem *, QTreeWidgetItem *);
@@ -192,16 +195,16 @@ class GenericPanel : public QTreeWidget {
 						      bool);
 	template<typename T> T valueForItem(QTreeWidgetItem *) const;
 	void unregisterItem(QTreeWidgetItem *);
-	
+
 	bool event(QEvent *) override;
-	
+
 	signals:
 	bool firstActivated();
 	void panelContentChanged();
-	
+
 	private slots:
 	void emitFirstActivated();
-	
+
 	private:
 	/**
 		@brief first_activation_
