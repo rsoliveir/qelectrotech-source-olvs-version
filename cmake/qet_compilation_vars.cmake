@@ -175,6 +175,8 @@ set(QET_SRC_FILES
   ${QET_DIR}/sources/conductorsegmentprofile.h
   ${QET_DIR}/sources/configdialog.cpp
   ${QET_DIR}/sources/configdialog.h
+  ${QET_DIR}/sources/ui/foliogrouporderdialog.cpp
+  ${QET_DIR}/sources/ui/foliogrouporderdialog.h
   ${QET_DIR}/sources/createdxf.cpp
   ${QET_DIR}/sources/createdxf.h
   ${QET_DIR}/sources/dxfpaintdevice.cpp
@@ -832,13 +834,13 @@ set(TS_FILES
   ${QET_DIR}/lang/qet_mn.ts
   ${QET_DIR}/lang/qet_nb.ts
   ${QET_DIR}/lang/qet_nl.ts
-  ${QET_DIR}/lang/qet_nl_BE.ts  
+  ${QET_DIR}/lang/qet_nl_BE.ts
   ${QET_DIR}/lang/qet_no.ts
   ${QET_DIR}/lang/qet_pl.ts
   ${QET_DIR}/lang/qet_pt.ts
   ${QET_DIR}/lang/qet_pt_BR.ts
   ${QET_DIR}/lang/qet_ro.ts
-  ${QET_DIR}/lang/qet_rs.ts  
+  ${QET_DIR}/lang/qet_rs.ts
   ${QET_DIR}/lang/qet_ru.ts
   ${QET_DIR}/lang/qet_sk.ts
   ${QET_DIR}/lang/qet_sl.ts
