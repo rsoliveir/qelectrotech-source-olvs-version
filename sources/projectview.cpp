@@ -799,7 +799,9 @@ void ProjectView::initActions()
 {
 	m_add_new_diagram = new QAction(QET::Icons::AddFolio, tr("Ajouter un folio"), this);
 	connect(m_add_new_diagram, &QAction::triggered, [this](){
-		Diagram::FolioType type = Diagram::askFolioTypeDialog(this);
+		bool accepted = false;
+		Diagram::FolioType type = Diagram::askFolioTypeDialog(this, &accepted);
+		if (!accepted) return;
 		this->m_project->addNewDiagram(-1, type);
 	});
 

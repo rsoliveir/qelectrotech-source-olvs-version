@@ -240,7 +240,7 @@ class Diagram : public QGraphicsScene
 		DiagramPosition convertPosition(const QPointF &);
 		static QPointF snapToGrid(const QPointF &p);
 		/// OLVS-version edition
-		static FolioType askFolioTypeDialog(QWidget *parent = nullptr);
+		static FolioType askFolioTypeDialog(QWidget *parent = nullptr, bool *accepted = nullptr);
 
 		bool drawTerminals() const;
 		void setDrawTerminals(bool);

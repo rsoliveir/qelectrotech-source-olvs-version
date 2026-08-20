@@ -2520,12 +2520,12 @@ Diagram::FolioType Diagram::folioTypeFromString(const QString &str)
 }
 
 /// OLVS-version edition
-Diagram::FolioType Diagram::askFolioTypeDialog(QWidget *parent)
+Diagram::FolioType Diagram::askFolioTypeDialog(QWidget *parent, bool *accepted)
 {
 	const QStringList options = {
-		QObject::tr("Schematic"),
-		QObject::tr("Panel Design"),
-		QObject::tr("Documentation")
+		QObject::tr("Esquema"),
+		QObject::tr("Design do Painel"),
+		QObject::tr("Documentação")
 	};
 
 	bool ok = false;
@@ -2534,13 +2534,17 @@ Diagram::FolioType Diagram::askFolioTypeDialog(QWidget *parent)
 		QObject::tr("Novo folio"),
 		QObject::tr("Tipo de folio:"),
 		options,
-		0,      // initial index defined (0 = "Schematic")
-		false,  // unable to be editted by user
+		0,
+		false,
 		&ok
 	);
 
+	if (accepted) {
+		*accepted = ok;
+	}
+
 	if (!ok) {
-		return FolioType::Schematic; // if user cancel it, default type is assumed
+		return FolioType::Schematic; // the value is discard when accepted == false
 	}
 
 	if (choice == options.at(1)) return FolioType::PanelLayout;

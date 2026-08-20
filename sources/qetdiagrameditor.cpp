@@ -438,7 +438,9 @@ void QETDiagramEditor::setUpActions()
 	ShortcutManager::instance().registerAction(m_project_add_diagram, "diagrameditor.project_add_diagram", tr("Éditeur de schémas"), Qt::CTRL | Qt::Key_T);
 	connect(m_project_add_diagram, &QAction::triggered, [this]() {
 		if (ProjectView *current_project = currentProjectView()) {
-			Diagram::FolioType type = Diagram::askFolioTypeDialog(this);
+			bool accepted = false;
+			Diagram::FolioType type = Diagram::askFolioTypeDialog(this, &accepted);
+			if (!accepted) return;
 			current_project->project()->addNewDiagram(-1, type);
 		}
 	});
@@ -2303,7 +2305,9 @@ void QETDiagramEditor::addDiagramToProject(QETProject *project)
 	if (ProjectView *project_view = findProject(project))
 	{
 		activateProject(project);
-		Diagram::FolioType type = Diagram::askFolioTypeDialog(this);
+		bool accepted = false;
+		Diagram::FolioType type = Diagram::askFolioTypeDialog(this, &accepted);
+		if (!accepted) return;
 		project_view->project()->addNewDiagram(-1, type);
 	}
 }
@@ -2322,7 +2326,9 @@ void QETDiagramEditor::addDiagramToProjectAt(QETProject *project, int pos)
 	if (ProjectView *project_view = findProject(project))
 	{
 		activateProject(project);
-		Diagram::FolioType type = Diagram::askFolioTypeDialog(this);
+		bool accepted = false;
+		Diagram::FolioType type = Diagram::askFolioTypeDialog(this, &accepted);
+		if (!accepted) return;
 		project_view->project()->addNewDiagram(pos, type);
 	}
 }

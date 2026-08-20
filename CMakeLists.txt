@@ -142,6 +142,17 @@ else()
     )
 endif()
 
+# OLVS-version edition
+# Copy compiled translation files (.qm) next to the executable after each
+# build, so the application can find them when run directly from the build
+# directory (outside of a full "install" step).
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+		"${QET_DIR}/lang"
+		"$<TARGET_FILE_DIR:${PROJECT_NAME}>/lang"
+	COMMENT "Copying translation files to build output directory"
+)
+
 # The default build only compiles the tracked .ts files to .qm (lrelease).
 # Refreshing the .ts from the sources (lupdate) is a developer action behind
 # the explicit "update_translations" target below: running lupdate on every
