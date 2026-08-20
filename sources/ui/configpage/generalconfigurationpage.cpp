@@ -1,17 +1,17 @@
 /*
 	Copyright 2006-2026 The QElectroTech Team
 	This file is part of QElectroTech.
-	
+
 	QElectroTech is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 2 of the License, or
 	(at your option) any later version.
-	
+
 	QElectroTech is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with QElectroTech.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -27,6 +27,8 @@
 #include <QFontDialog>
 #include <QSettings>
 
+#include "../../utils/unitconverter.h"
+
 /**
 	@brief GeneralConfigurationPage::GeneralConfigurationPage
 	@param parent
@@ -36,9 +38,9 @@ GeneralConfigurationPage::GeneralConfigurationPage(QWidget *parent) :
 	ui(new Ui::GeneralConfigurationPage)
 {
 	ui->setupUi(this);
-	
+
 	QSettings settings;
-	
+
 		//Appearance tab
 	ui->m_hdpi_round_policy_cb->addItem(tr("Arrondi supérieur pour 0.5 et plus"), QLatin1String("Round"));
 	ui->m_hdpi_round_policy_cb->addItem(tr("Toujours arrondi supérieur"), QLatin1String("Ceil"));
@@ -67,6 +69,27 @@ GeneralConfigurationPage::GeneralConfigurationPage(QWidget *parent) :
 	ui->guides_startup_cb->setChecked(settings.value("diagrameditor/guides_display_startup", false).toBool());
 	ui->DiagramEditor_xGrid_sb->setValue(settings.value("diagrameditor/Xgrid", 10).toInt());
 	ui->DiagramEditor_yGrid_sb->setValue(settings.value("diagrameditor/Ygrid", 10).toInt());
+
+	// OLVS-version edition — detect whether the saved grid value matches a known
+	// preset, so the combobox reflects the actual current state instead of
+	// always resetting to "Custom".
+	{
+		int current_x = ui->DiagramEditor_xGrid_sb->value();
+		int current_y = ui->DiagramEditor_yGrid_sb->value();
+
+		int preset_1mm = qRound(UnitConverter::mmToPx(1.0));
+		int preset_2mm = qRound(UnitConverter::mmToPx(2.0));
+		int preset_4mm = qRound(UnitConverter::mmToPx(4.0));
+
+		int preset_index = 3; // default: Custom
+		if (current_x == current_y) {
+			if      (current_x == preset_1mm) preset_index = 0;
+			else if (current_x == preset_2mm) preset_index = 1;
+			else if (current_x == preset_4mm) preset_index = 2;
+		}
+		ui->DiagramEditor_GridPreset_cb->setCurrentIndex(preset_index);
+	}
+
 	ui->DiagramEditor_xKeyGrid_sb->setValue(settings.value("diagrameditor/key_Xgrid", 10).toInt());
 	ui->DiagramEditor_yKeyGrid_sb->setValue(settings.value("diagrameditor/key_Ygrid", 10).toInt());
 	ui->DiagramEditor_xKeyGridFine_sb->setValue(settings.value("diagrameditor/key_fine_Xgrid", 1).toInt());
@@ -85,7 +108,7 @@ GeneralConfigurationPage::GeneralConfigurationPage(QWidget *parent) :
 	ui->m_use_folio_label->setChecked(settings.value("genericpanel/folio", true).toBool());
 	ui->m_border_0->setChecked(settings.value("border-columns_0", false).toBool());
 	ui->m_autosave_sb->setValue(settings.value("diagrameditor/autosave-interval", 0).toInt());
-	
+
 	QString fontInfos = settings.value("diagramitemfont", "Liberation Sans").toString() + " " +
 			settings.value("diagramitemsize", "9").toString() + " (" +
 			settings.value("diagramitemstyle", "Regular").toString() + ")";
@@ -118,7 +141,7 @@ GeneralConfigurationPage::GeneralConfigurationPage(QWidget *parent) :
 							font.styleName() + ")";
 		ui->m_indi_text_font_pb->setText(fontInfos);
 	} else { ui->m_indi_text_font_pb->setText("Liberation Sans 9 (Regular)"); }
-	
+
 	ui->m_highlight_integrated_elements->setChecked(settings.value("diagrameditor/highlight-integrated-elements", true).toBool());
 	ui->m_default_elements_info->setPlainText(settings.value("elementeditor/default-informations", "").toString());
 	/*
@@ -165,7 +188,7 @@ GeneralConfigurationPage::GeneralConfigurationPage(QWidget *parent) :
 		ui->m_custom_elmt_path_cb->setItemData(1, path, Qt::DisplayRole);
 		ui->m_custom_elmt_path_cb->blockSignals(false);
 	}
-	
+
 
 	path = settings.value("elements-collections/custom-tbt-path", "default").toString();
 	if (path != "default")
@@ -175,7 +198,7 @@ GeneralConfigurationPage::GeneralConfigurationPage(QWidget *parent) :
 		ui->m_custom_tbt_path_cb->setItemData(1, path, Qt::DisplayRole);
 		ui->m_custom_tbt_path_cb->blockSignals(false);
 	}
-	
+
 	path = settings.value("elements-collections/macros-path", "default").toString();
 	if (path != "default")
 	{
@@ -185,7 +208,7 @@ GeneralConfigurationPage::GeneralConfigurationPage(QWidget *parent) :
 		ui->m_user_macros_path_cb->blockSignals(false);
 	}
 
-	fillLang();	
+	fillLang();
 }
 
 GeneralConfigurationPage::~GeneralConfigurationPage()
@@ -200,7 +223,7 @@ GeneralConfigurationPage::~GeneralConfigurationPage()
 void GeneralConfigurationPage::applyConf()
 {
 	QSettings settings;
-	
+
 		//GLOBAL
 	bool was_using_system_colors = settings.value("usesystemcolors", "true").toBool();
 	bool must_use_system_colors  = ui->m_use_system_color_cb->isChecked();
@@ -300,7 +323,7 @@ void GeneralConfigurationPage::applyConf()
 	if (path != settings.value("elements-collections/custom-collection-path").toString()) {
 		QETApp::resetCollectionsPath();
 	}
-	
+
 	path = settings.value("elements-collections/company-tbt-path").toString();
 	if (ui->m_company_tbt_path_cb->currentIndex() == 1)
 	{
@@ -589,6 +612,22 @@ void GeneralConfigurationPage::on_DiagramEditor_Grid_PointSize_min_sb_valueChang
 	ui->DiagramEditor_Grid_PointSize_max_sb->setMinimum(std::max(1, value));
 }
 
+/// OLVS-version edition
+void GeneralConfigurationPage::on_DiagramEditor_GridPreset_cb_currentIndexChanged(int index)
+{
+	qreal mm_value = 0.0;
+	switch (index) {
+		case 0: mm_value = 1.0; break; // "1 mm"
+		case 1: mm_value = 2.0; break; // "2 mm"
+		case 2: mm_value = 4.0; break; // "4 mm"
+		default: return; // "Custom" — leave existing spinbox values untouched
+	}
+
+	int px_value = qRound(UnitConverter::mmToPx(mm_value));
+	ui->DiagramEditor_xGrid_sb->setValue(px_value);
+	ui->DiagramEditor_yGrid_sb->setValue(px_value);
+}
+
 /**
 	@brief GeneralConfigurationPage::on_ElementEditor_Grid_PointSize_min_sb_valueChanged
 	the min-value of the max-SpinBox has to be limited:
@@ -624,4 +663,3 @@ void GeneralConfigurationPage::on_m_hdpi_round_cb_clicked(bool checked)
 	ui->m_hdpi_round_label->setEnabled(checked);
 	ui->m_hdpi_round_policy_cb->setEnabled(checked);
 }
-

@@ -1,17 +1,17 @@
 /*
 	Copyright 2006-2026 The QElectroTech Team
 	This file is part of QElectroTech.
-	
+
 	QElectroTech is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 2 of the License, or
 	(at your option) any later version.
-	
+
 	QElectroTech is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with QElectroTech.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -30,14 +30,14 @@ class QActionGroup;
 namespace QET {
 	QString license();  // only QETs license
 	std::tuple<QString, QString> licenses(const QString &); // all licenses
-	
+
 		//Describe the current state of a graphic item
 	enum GraphicsItemState {
 		GIOK,				 ///<General state
 		GIBuildingFromXml, ///<Item is currently building from a xml description (element)
 		GILoadingFromXml	 ///<Item is loading her properties from a xml description.
 	};
-	
+
 		/// List the various kind of changes for the zValue
 	enum DepthOption {
 		BringForward, ///< Bring item to the foreground so they have the highest zValue
@@ -45,7 +45,7 @@ namespace QET {
 		Lower,        ///< Send item one layer below their current one; zValues are decremented
 		SendBackward  ///< Send item to the background so they have the lowest zValue
 	};
-	
+
 	/// Oriented movements
 	enum OrientedMovement {
 		ToNorth,
@@ -57,7 +57,7 @@ namespace QET {
 		ToWest,
 		ToNorthWest
 	};
-	
+
 	/// List areas related to some common operations
 	enum OperationAreas {
 		ChangeInnerPoints = -4,
@@ -73,22 +73,22 @@ namespace QET {
 		ResizeFromBottomCenterCorner = 6,
 		ResizeFromBottomRightCorner = 7
 	};
-	
+
 	/// Supported types of interactive scaling, typically for a single element primitive
 	enum ScalingMethod {
 		FreeScaling,              ///< do not interfere with the default scaling process
 		SnapScalingPointToGrid,   ///< snap the point used to define the new bounding rectangle to the grid
 		RoundScaleRatios          ///< adjust the scaling movement so that the induced scaling ratios are rounded
 	};
-	
+
 	/// Known kinds of conductor segments
 	enum ConductorSegmentType {
-		Horizontal = 1, ///< Horizontal segment 
-		Vertical = 2,   ///< Vertical segment 
+		Horizontal = 1, ///< Horizontal segment
+		Vertical = 2,   ///< Vertical segment
 		Both = 3        ///< Invalid segment
 	};
-	
-	
+
+
 	/**
 		This enums lists the various kind of items users can manage within the
 		application.
@@ -104,9 +104,10 @@ namespace QET {
 		TitleBlockTemplatesCollectionItem =   24,
 		Diagram                           =   32,
 		Project                           =   64,
+		DiagramGroup                      =  128, // OLVS-version edition — category node (Diagrams / Panel Layout / Documentation) in the project tree
 		All                               =  127
 	};
-	
+
 	/**
 		This enum represents the various steps when applying a filter.
 	*/
@@ -115,7 +116,7 @@ namespace QET {
 		RegularFilter,
 		EndFilter
 	};
-	
+
 	/**
 		This enums lists the various ways to handle a standard problem when copying
 		or moving element items (collections, categories, elements).
@@ -129,7 +130,7 @@ namespace QET {
 		Managed, ///< the current item was handled by the Strategy object: do not treat it and continue
 		Rename   ///< the target has to be renamed
 	};
-	
+
 	/**
 		This enum represents diagram areas that may be exported/printed.
 	*/
@@ -137,7 +138,7 @@ namespace QET {
 		BorderArea,      ///< Export the diagram along with its border and title block
 		ElementsArea     ///< Export the content of the diagram only
 	};
-	
+
 	/// enum used to specify the type of a length
 	enum TitleBlockColumnLength {
 		Absolute,                   ///< the length is absolute and should be applied as is
@@ -155,7 +156,7 @@ namespace QET {
 
 	QString qetCollectionToString (const QetCollection &c);
 	QetCollection qetCollectionFromString (const QString &str);
-	
+
 	bool lineContainsPoint(const QLineF &, const QPointF &);
 	bool orthogonalProjection(const QPointF &, const QLineF &, QPointF * = nullptr);
 	bool attributeIsAnInteger(const QDomElement &, const QString& , int * = nullptr);

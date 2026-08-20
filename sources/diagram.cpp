@@ -850,6 +850,9 @@ QDomDocument Diagram::toXml(bool whole_content, bool is_copy_command) {
 		/// alteration for implementation of panel layout design like AutoCad
 		//Folio type
 		dom_root.setAttribute(QStringLiteral("type"), folioTypeToString(m_folio_type));
+		//Page size and plot scale — OLVS-version edition
+		dom_root.setAttribute(QStringLiteral("pagesize"), pageSizeToString(m_page_size));
+		dom_root.setAttribute(QStringLiteral("scale"), QString::number(m_scale_denominator));
 
 		//Element Folio Sequential Variables
 		if (!m_elmt_unitfolio_max.isEmpty()
@@ -1336,6 +1339,10 @@ bool Diagram::fromXml(QDomElement &document,
 
 		// Load folio type (fallback to Schematic if attribute is missing — legacy projects)
 		m_folio_type = folioTypeFromString(root.attribute(QStringLiteral("type"), QStringLiteral("schematic")));
+		// Load page size and plot scale — OLVS-version edition
+		// Fallback to Custom/1.0 preserves today's fit-to-page behavior for legacy diagrams
+		m_page_size = pageSizeFromString(root.attribute(QStringLiteral("pagesize"), QStringLiteral("custom")));
+		m_scale_denominator = root.attribute(QStringLiteral("scale"), QStringLiteral("1.0")).toDouble();
 
 			//Load Element Folio Sequential
 		folioSequentialsFromXml(root,
@@ -2492,6 +2499,58 @@ int Diagram::folioIndex() const
 Diagram::FolioType Diagram::folioType() const
 {
 	return m_folio_type;
+}
+
+/// OLVS-version edition
+Diagram::PageSize Diagram::pageSize() const
+{
+	return m_page_size;
+}
+
+void Diagram::setPageSize(PageSize size)
+{
+	m_page_size = size;
+}
+
+qreal Diagram::scaleDenominator() const
+{
+	return m_scale_denominator;
+}
+
+void Diagram::setScaleDenominator(qreal denominator)
+{
+	// A denominator below 1 makes no physical sense for a "1:N" plot scale
+	m_scale_denominator = (denominator < 1.0) ? 1.0 : denominator;
+}
+
+QString Diagram::pageSizeToString(PageSize size)
+{
+	switch (size) {
+		case PageSize::A4:     return QStringLiteral("A4");
+		case PageSize::A3:     return QStringLiteral("A3");
+		case PageSize::Letter: return QStringLiteral("Letter");
+		case PageSize::Custom:
+		default:               return QStringLiteral("custom");
+	}
+}
+
+Diagram::PageSize Diagram::pageSizeFromString(const QString &str)
+{
+	if (str == QStringLiteral("A4"))     return PageSize::A4;
+	if (str == QStringLiteral("A3"))     return PageSize::A3;
+	if (str == QStringLiteral("Letter")) return PageSize::Letter;
+	return PageSize::Custom;
+}
+
+QSizeF Diagram::pageSizeMillimeters(PageSize size)
+{
+	switch (size) {
+		case PageSize::A4:     return QSizeF(210.0, 297.0);
+		case PageSize::A3:     return QSizeF(297.0, 420.0);
+		case PageSize::Letter: return QSizeF(215.9, 279.4);
+		case PageSize::Custom:
+		default:               return QSizeF(); // invalid = no fixed size
+	}
 }
 
 void Diagram::setFolioType(FolioType type)

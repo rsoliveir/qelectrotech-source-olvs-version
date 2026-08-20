@@ -798,6 +798,8 @@ set(QET_SRC_FILES
   ${QET_DIR}/sources/utils/qetsettings.h
   ${QET_DIR}/sources/utils/qetutils.cpp
   ${QET_DIR}/sources/utils/qetutils.h
+  ${QET_DIR}/sources/utils/unitconverter.cpp
+  ${QET_DIR}/sources/utils/unitconverter.h
 
   ${QET_DIR}/sources/xml/terminalstripitemxml.cpp
   ${QET_DIR}/sources/xml/terminalstripitemxml.h

@@ -20,6 +20,8 @@
 #include "../diagram.h"
 #include "ui_borderpropertieswidget.h"
 
+#include "../utils/unitconverter.h"
+
 /**
 	@brief BorderPropertiesWidget::BorderPropertiesWidget
 	default constructor
@@ -52,10 +54,10 @@ void BorderPropertiesWidget::setProperties(const BorderProperties &bp)
 {
 	m_properties = bp;
 	ui -> m_colums_count_sp    ->setValue   (m_properties.columns_count);
-	ui -> m_columns_width_sp   ->setValue   (m_properties.columns_width);
+	ui -> m_columns_width_sp   ->setValue   (UnitConverter::pxToMm(m_properties.columns_width)); // OLVS-version edition
 	ui -> m_display_columns_cb ->setChecked (m_properties.display_columns);
 	ui -> m_rows_count_sp      ->setValue   (m_properties.rows_count);
-	ui -> m_rows_height_sp     ->setValue   (m_properties.rows_height);
+	ui -> m_rows_height_sp     ->setValue   (UnitConverter::pxToMm(m_properties.rows_height)); // OLVS-version edition
 	ui -> m_display_rows_cb    ->setChecked (m_properties.display_rows);
 }
 
@@ -66,10 +68,10 @@ void BorderPropertiesWidget::setProperties(const BorderProperties &bp)
 const BorderProperties &BorderPropertiesWidget::properties ()
 {
 	m_properties.columns_count   = ui -> m_colums_count_sp    -> value();
-	m_properties.columns_width   = ui -> m_columns_width_sp   -> value();
+	m_properties.columns_width   = UnitConverter::mmToPx(ui -> m_columns_width_sp -> value()); // OLVS-version edition
 	m_properties.display_columns = ui -> m_display_columns_cb -> isChecked();
 	m_properties.rows_count      = ui -> m_rows_count_sp      -> value();
-	m_properties.rows_height     = ui -> m_rows_height_sp     -> value();
+	m_properties.rows_height     = UnitConverter::mmToPx(ui -> m_rows_height_sp -> value()); // OLVS-version edition
 	m_properties.display_rows    = ui -> m_display_rows_cb    -> isChecked();
 	return m_properties;
 }

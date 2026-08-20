@@ -86,6 +86,8 @@ class Diagram : public QGraphicsScene
 		///  ------- OLVS edition v0.101 --------------
 		/// alteration for implementation of panel layout design like AutoCad
 		enum class FolioType { Schematic, PanelLayout, Documentation };
+		/// OLVS-version edition
+		enum class PageSize { A4, A3, Letter, Custom };
 
 		/// Default properties for new conductors
 		ConductorProperties defaultConductorProperties;
@@ -129,6 +131,9 @@ class Diagram : public QGraphicsScene
 		///  ------- OLVS edition v0.101 --------------
 		/// alteration for implementation of panel layout design like AutoCad
 		FolioType m_folio_type = FolioType::Schematic;
+		/// OLVS-version edition
+		PageSize m_page_size = PageSize::Custom;
+		qreal m_scale_denominator = 1.0; // represents the "N" in a 1:N plot scale
 
 		bool draw_grid_;
 		bool use_border_;
@@ -182,6 +187,17 @@ class Diagram : public QGraphicsScene
 		void        setFolioType(FolioType type);
 		static QString   folioTypeToString(FolioType type);
 		static FolioType  folioTypeFromString(const QString &str);
+		/// OLVS-version edition
+		PageSize    pageSize() const;
+		void        setPageSize(PageSize size);
+		qreal       scaleDenominator() const;
+		void        setScaleDenominator(qreal denominator);
+		static QString  pageSizeToString(PageSize size);
+		static PageSize  pageSizeFromString(const QString &str);
+		/// Physical page dimensions in millimeters (portrait). Returns an invalid
+		/// (empty) QSizeF for PageSize::Custom, meaning "no fixed physical size —
+		/// use the diagram's own content extent".
+		static QSizeF   pageSizeMillimeters(PageSize size);
 
 		void        showMe() {emit showDiagram(this);}
 		bool        isReadOnly() const;

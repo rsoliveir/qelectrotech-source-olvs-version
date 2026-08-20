@@ -25,6 +25,11 @@
 #include "projectpropertiesdialog.h"
 #include "titleblockpropertieswidget.h"
 
+#include <QGroupBox>
+#include <QComboBox>
+#include <QDoubleSpinBox>
+#include <QFormLayout>
+
 /**
 	@brief DiagramPropertiesDialog::DiagramPropertiesDialog
 	Default constructor
@@ -75,6 +80,59 @@ DiagramPropertiesDialog::DiagramPropertiesDialog(Diagram *diagram, QWidget *pare
 
 	connect(m_cpw->editAutonumPushButton(), &QPushButton::clicked, this, &DiagramPropertiesDialog::editAutonum);
 
+	// OLVS-version edition — physical page size & contractual plot scale
+	QGroupBox *scale_group = new QGroupBox(tr("Physical page && plot scale"), this);
+	QComboBox *page_size_cb = new QComboBox(scale_group);
+	page_size_cb->addItem(tr("Custom (fit to page)"), static_cast<int>(Diagram::PageSize::Custom));
+	page_size_cb->addItem(tr("A4"),  static_cast<int>(Diagram::PageSize::A4));
+	page_size_cb->addItem(tr("A3"),  static_cast<int>(Diagram::PageSize::A3));
+	page_size_cb->addItem(tr("Letter"), static_cast<int>(Diagram::PageSize::Letter));
+	int current_page_size_index = page_size_cb->findData(static_cast<int>(diagram->pageSize()));
+	page_size_cb->setCurrentIndex(current_page_size_index >= 0 ? current_page_size_index : 0);
+	page_size_cb->setEnabled(!diagram_is_read_only);
+
+	// OLVS-version edition — standard engineering scale presets
+	QComboBox *scale_preset_cb = new QComboBox(scale_group);
+	const QList<qreal> standard_scales = {1.0, 2.0, 5.0, 10.0, 20.0, 25.0, 50.0, 100.0};
+	for (qreal s : standard_scales) {
+		scale_preset_cb->addItem(tr("1 : %1").arg(s), s);
+	}
+	scale_preset_cb->addItem(tr("Custom"), -1.0);
+
+	QDoubleSpinBox *scale_sb = new QDoubleSpinBox(scale_group);
+	scale_sb->setRange(1.0, 1000.0);
+	scale_sb->setDecimals(0);
+	scale_sb->setValue(diagram->scaleDenominator());
+	scale_sb->setPrefix(tr("1 : "));
+	scale_sb->setEnabled(!diagram_is_read_only);
+
+	// Detect whether the current value matches a known preset
+	int preset_index = scale_preset_cb->count() - 1; // default: Custom
+	for (int i = 0; i < standard_scales.size(); ++i) {
+		if (qFuzzyCompare(diagram->scaleDenominator(), standard_scales.at(i))) {
+			preset_index = i;
+			break;
+		}
+	}
+	scale_preset_cb->setCurrentIndex(preset_index);
+	scale_sb->setVisible(preset_index == scale_preset_cb->count() - 1);
+	scale_preset_cb->setEnabled(!diagram_is_read_only);
+
+	connect(scale_preset_cb, QOverload<int>::of(&QComboBox::currentIndexChanged), scale_sb,
+		[scale_preset_cb, scale_sb](int index) {
+			qreal data = scale_preset_cb->itemData(index).toDouble();
+			bool is_custom = (data < 0);
+			scale_sb->setVisible(is_custom);
+			if (!is_custom) {
+				scale_sb->setValue(data);
+			}
+		});
+
+	QFormLayout *scale_layout = new QFormLayout(scale_group);
+	scale_layout->addRow(tr("Page size:"), page_size_cb);
+	scale_layout->addRow(tr("Plot scale:"), scale_preset_cb);
+	scale_layout->addRow(QString(), scale_sb); // hidden unless "Custom" is selected
+
 		// Buttons
 	QDialogButtonBox boutons(diagram_is_read_only ? QDialogButtonBox::Ok : QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 	connect(&boutons, &QDialogButtonBox::accepted, this, &DiagramPropertiesDialog::accept);
@@ -84,6 +142,7 @@ DiagramPropertiesDialog::DiagramPropertiesDialog(Diagram *diagram, QWidget *pare
 	glayout->addWidget(border_infos,0,0);
 	glayout->addWidget(titleblock_infos, 1, 0);
 	glayout->addWidget(m_cpw, 0, 1, 0, 1);
+	glayout->addWidget(scale_group, 2, 0); // OLVS-version edition — left column, below title block info
 
 	QVBoxLayout vlayout(this);
 	vlayout.addLayout(glayout);
@@ -99,6 +158,17 @@ DiagramPropertiesDialog::DiagramPropertiesDialog(Diagram *diagram, QWidget *pare
 		// Title block have change
 		if (new_titleblock != titleblock) {
 			diagram -> undoStack().push(new ChangeTitleBlockCommand(diagram, titleblock, new_titleblock));
+		}
+
+		// Page size / plot scale change — OLVS-version edition
+		auto new_page_size = static_cast<Diagram::PageSize>(page_size_cb->currentData().toInt());
+		qreal new_scale = scale_sb->value();
+		if (new_page_size != diagram->pageSize() || !qFuzzyCompare(new_scale, diagram->scaleDenominator())) {
+    		#if TODO_LIST
+    		#pragma message("@TODO implement an undo command for page size / scale changes")
+    		#endif
+    			diagram->setPageSize(new_page_size);
+    			diagram->setScaleDenominator(new_scale);
 		}
 
 		// Border have change
