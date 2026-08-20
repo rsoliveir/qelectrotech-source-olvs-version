@@ -83,6 +83,14 @@ class ProjectPrintWindow : public QMainWindow
 		void requestPaint();
 		void printDiagram(Diagram *diagram, bool fit_page, QPainter *painter, QPrinter *printer, const QMap<Diagram*, int> &diagramPageMap = {});
 		QRect diagramRect(Diagram *diagram, const ExportProperties &option) const;
+		/// OLVS-version edition
+		/// Computes the target rect (in device pixels of the QPainter) that
+		/// respects the diagram's contractual plot scale (Diagram::scaleDenominator())
+		/// on the given physical page size, instead of stretching to fill the page.
+		/// Falls back to painter->viewport() (today's fit-to-page behavior) when the
+		/// diagram uses Diagram::PageSize::Custom (no fixed physical page assigned).
+		QRectF contractualTargetRect(Diagram *diagram, QPainter *painter, QPrinter *printer) const;
+
 		int horizontalPagesCount(Diagram *diagram, const ExportProperties &option, bool full_page) const;
 		int verticalPagesCount(Diagram *diagram, const ExportProperties &option, bool full_page) const;
 		ExportProperties exportProperties() const;

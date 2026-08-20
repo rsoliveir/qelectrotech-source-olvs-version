@@ -16,6 +16,7 @@
 	along with QElectroTech.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "projectprintwindow.h"
+#include "unitconverter.h"
 
 #include "../diagram.h"
 #include "../pdf_links.h"
@@ -272,6 +273,36 @@ void ProjectPrintWindow::requestPaint()
 	// pdfConvertUriToGoTo() is deferred to print() via QTimer::singleShot(0).
 }
 
+/// OLVS-version edition
+QRectF ProjectPrintWindow::contractualTargetRect(Diagram *diagram, QPainter *painter, QPrinter *printer) const
+{
+	const QRectF viewport_rect = QRectF(painter->viewport());
+
+	// Custom page size means "no fixed physical page assigned to this
+	// folio" — preserve today's fit-to-page behavior entirely.
+	const QSizeF page_mm = Diagram::pageSizeMillimeters(diagram->pageSize());
+	if (!page_mm.isValid() || page_mm.isEmpty()) {
+		return viewport_rect;
+	}
+
+	// diagram_rect is in scene px (96 DPI); convert its size to mm, then to
+	// what it would occupy at the diagram's declared 1:N scale.
+	const QRectF diagram_rect = QRectF(diagramRect(diagram, exportProperties()));
+	const qreal diagram_width_mm  = UnitConverter::pxToMm(diagram_rect.width())  / diagram->scaleDenominator();
+	const qreal diagram_height_mm = UnitConverter::pxToMm(diagram_rect.height()) / diagram->scaleDenominator();
+
+	// Convert that physical size to device pixels of this printer/painter,
+	// using the printer's own resolution rather than QET's fixed 96 DPI —
+	// printer->resolution() is expressed in dots per inch.
+	const qreal dpi = printer->resolution();
+	const qreal target_width_px  = (diagram_width_mm  / 25.4) * dpi;
+	const qreal target_height_px = (diagram_height_mm / 25.4) * dpi;
+
+	// Anchored at the viewport's top-left, same anchoring convention as the
+	// existing Diagram::render(..., Qt::KeepAspectRatio) call it replaces.
+	return QRectF(viewport_rect.topLeft(), QSizeF(target_width_px, target_height_px));
+}
+
 /**
  * @brief ProjectPrintWindow::printDiagram
  * Print @diagram on the @printer
@@ -305,7 +336,11 @@ void ProjectPrintWindow::printDiagram(Diagram *diagram, bool fit_page, QPainter 
 	auto full_page = printer->fullPage();
 	auto diagram_rect = QRectF(diagramRect(diagram, option));
 	if (fit_page) {
-		diagram->render(painter, QRectF(), diagram_rect, Qt::KeepAspectRatio);
+		// OLVS-version edition — respect the diagram's contractual plot scale
+		// (1:N) on its assigned physical page size, instead of always
+		// stretching the drawing to fill the available page.
+		const QRectF contractual_target = contractualTargetRect(diagram, painter, printer);
+		diagram->render(painter, contractual_target, diagram_rect, Qt::KeepAspectRatio);
 	} else {
 		// Print on one or several pages
 
@@ -370,7 +405,7 @@ void ProjectPrintWindow::printDiagram(Diagram *diagram, bool fit_page, QPainter 
 			// transform appliquee par :
 			//   diagram->render(painter, QRectF(), diagram_rect, KeepAspectRatio)
 			// cible vide => painter->viewport() ; source = diagram_rect ; centre.
-			const QRectF target = QRectF(painter->viewport());
+			const QRectF target = contractualTargetRect(diagram, painter, printer);
 			const QRectF source = QRectF(diagram_rect); // meme source que render()
 
 			// render() ANCRE en haut-gauche (pas de centrage) :
