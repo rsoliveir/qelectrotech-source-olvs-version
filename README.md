@@ -225,5 +225,10 @@ and implement new features. Thanks in advance for your generous donations.
 
 For more information, look at [Paypal](https://www.paypal.com/donate/?cmd=_s-xclick&hosted_button_id=ZZHC9D7C3MDPC&ssrt=1694606609672)
 
+OLVS design example with QET.
+
+[pag_safety.pdf](https://github.com/user-attachments/files/31247306/pag_safety.pdf)
+
+
 
 
